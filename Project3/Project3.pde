@@ -4,25 +4,50 @@
 */
 class Ball
 {
-  PVector pos, vel;
+  ///The 3D position of the Ball
+  PVector pos;
+  
+  ///The velocity of the Ball
+  PVector vel;
+  
+  ///The radius of the Ball
   float r;
   boolean hasHit = false;
   
+  /**
+  * @brief Initializes a Ball object with the given parameters
+  * @param x The ball's X position
+  * @param y The ball's Y position
+  * @param z The ball's Z position
+  * @param r The ball's radius
+  * @param vx The ball's velocity's X component
+  * @param vy The ball's velocity's Y component
+  * @param vz The ball's velocity's Z component
+  */
   public Ball(float x, float y, float z, float r, float vx, float vy, float vz)
   {
     pos = new PVector(x, y, z);
     vel = new PVector(vx, vy, vz);
     this.r = r;
   }
-  
+
+  /**
+  * @brief Initializes a Ball object with the given parameters, and a velocity of 0
+  * @param x The ball's X position
+  * @param y The ball's Y position
+  * @param z The ball's Z position
+  * @param r The ball's radius
+  */  
   public Ball(float x, float y, float z, float r)
   {
     this(x, y, z, r, 0, 0, 0);
   }
 }
 
+///The Ball objects in the system
 ArrayList<Ball> balls = new ArrayList<Ball>();
 
+///The minimum velocity a ball can have before being stopped
 final float minSpeed = .01f;
 
 void setup()
@@ -57,7 +82,7 @@ void draw()
       if(ball == check) continue;
       
       float d = ball.pos.dist(check.pos);
-      if(d <= 1 + ball.r + check.r && ball.vel.mag() > minSpeed)// || ball.hasHit)
+      if(d <= 1 + ball.r + check.r && ball.vel.mag() > minSpeed)
       {
         ball.hasHit = true;
         
