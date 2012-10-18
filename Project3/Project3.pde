@@ -23,11 +23,20 @@ class Ball
 
 ArrayList<Ball> balls = new ArrayList<Ball>();
 
+final float minSpeed = .01f;
+
 void setup()
 {
   size(400, 400, P3D);
   balls.add(new Ball(200f, 200f, -100f, 40f));
   balls.add(new Ball(100f, 150f, -100f, 40f, 1, 0, 0));
+  balls.add(new Ball(200f, 150f, 100f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 500f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 600f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 700f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 800f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 900f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 1000f, 40f, 0, 0, -1));
 }
 
 void draw()
@@ -48,7 +57,7 @@ void draw()
       if(ball == check) continue;
       
       float d = ball.pos.dist(check.pos);
-      if(d < ball.r + check.r && ball.vel.mag() != 0 || ball.hasHit)
+      if(d <= 1 + ball.r + check.r && ball.vel.mag() > minSpeed)// || ball.hasHit)
       {
         ball.hasHit = true;
         
@@ -64,7 +73,13 @@ void draw()
         tang.mult(ball.vel.mag() / tang.mag());
         
         //Set the new velocity
-        ball.vel = tang;
+        if(ball.hasHit)
+        {
+          ball.vel.add(tang);
+          ball.vel.div(2);
+        }
+        else
+          ball.vel = tang;
         
         //Adjust for the discrete timesteps
         PVector translation = vAnti.get();
@@ -76,6 +91,9 @@ void draw()
         
         fill(255, 0, 255);
       }
+      //If a ball's speed is too low, stop it
+      else if(ball.vel.mag() < minSpeed)
+        ball.vel.set(0, 0, 0);
     }
         
     pushMatrix();
