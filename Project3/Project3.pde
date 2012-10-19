@@ -57,11 +57,11 @@ void setup()
   balls.add(new Ball(100f, 150f, -100f, 40f, 1, 0, 0));
   balls.add(new Ball(200f, 150f, 100f, 40f, 0, 0, -1));
   balls.add(new Ball(200f, 200f, 500f, 40f, 0, 0, -1));
-  balls.add(new Ball(200f, 200f, 600f, 40f, 0, 0, -1));
-  balls.add(new Ball(200f, 200f, 700f, 40f, 0, 0, -1));
   balls.add(new Ball(200f, 200f, 800f, 40f, 0, 0, -1));
-  balls.add(new Ball(200f, 200f, 900f, 40f, 0, 0, -1));
-  balls.add(new Ball(200f, 200f, 1000f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 1100f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 1300f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 1600f, 40f, 0, 0, -1));
+  balls.add(new Ball(200f, 200f, 1900f, 40f, 0, 0, -1));
 }
 
 void draw()
