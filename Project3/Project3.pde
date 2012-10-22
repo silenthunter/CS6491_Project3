@@ -105,9 +105,12 @@ void draw()
     
     for(Ball ball : balls)
     {
+      
       fill(0, 255, 0);
       if(counter == 1 || ball.hasHit) ball.pos.add(ball.vel);
-      
+     
+      //Don't check for collisions if the ball isn't moving. (I really should use brackets....)
+      if(ball.vel.mag() != 0) 
       //Find collisions
       for(Ball check : balls)
       {
@@ -168,12 +171,15 @@ void draw()
       }
     }
   }while(counter < maxCounter && hasHit);
+  
+  if(mousePressed)
+    spawnBall(mouseX, mouseY);
 }
 
-void mouseClicked()
+void spawnBall(float X, float Y)
 {
   
-  Ball ball = new Ball(mouseX, mouseY, -defaultRadius, defaultRadius);
+  Ball ball = new Ball(X, Y, -defaultRadius, defaultRadius);
   PVector vel = ball.pos.get();
   vel.sub(POV);
   vel.mult(launchVel / vel.mag());
