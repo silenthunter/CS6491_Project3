@@ -63,6 +63,73 @@ class Ball
   }
 }
 
+/**
+* @brief Represents and edge composed of 2 vertices
+*/
+class Edge implements Comparable
+{
+  int[] verts = new int[2];
+  
+  /**
+  * @brief Constructs an edge from 2 vertices
+  * @param vert1 The first vertex
+  * @param vert2 The second vertex
+  */
+  public Edge(int vert1, int vert2)
+  {
+    verts[0] = vert1;
+    verts[1] = vert2;
+  }
+  
+  public int compareTo(Object o)
+  {
+    //I should handle this error....
+    if(o instanceof Edge) return -1;
+    
+    Edge edge = (Edge)o;
+    if((verts[0] == edge.verts[0] && verts[1] == edge.verts[1]) ||
+        (verts[0] == edge.verts[1] && verts[1] == edge.verts[0]))
+      return 0;
+    
+    return -1;
+  }
+}
+
+class Tri implements Comparable
+{
+  Edge[] edges = new Edge[3];
+  
+  /**
+  * @brief Constructs an triangle from 3 edges
+  * @param e1 The first edge
+  * @param e2 The second edge
+  * @param e3 The third edge
+  */
+  public Tri(Edge e1, Edge e2, Edge e3)
+  {
+    edges[0] = e1;
+    edges[1] = e2;
+    edges[2] = e3;
+  }
+  
+  public int compareTo(Object o)
+  {
+    //I should handle this error....
+    if(o instanceof Tri) return -1;
+    
+    Tri tri = (Tri)o;
+    if((edges[0] == tri.edges[0] && edges[1] == tri.edges[1] && tri.edges[2] == tri.edges[2]) ||
+        (edges[0] == tri.edges[1] && edges[1] == tri.edges[2] && tri.edges[2] == tri.edges[0]) ||
+        (edges[0] == tri.edges[2] && edges[1] == tri.edges[0] && tri.edges[2] == tri.edges[1]) ||
+        (edges[0] == tri.edges[1] && edges[1] == tri.edges[0] && tri.edges[2] == tri.edges[2]) ||
+        (edges[0] == tri.edges[2] && edges[1] == tri.edges[1] && tri.edges[2] == tri.edges[0]) ||
+        (edges[0] == tri.edges[0] && edges[1] == tri.edges[2] && tri.edges[2] == tri.edges[1]))
+      return 0;
+    
+    return -1;
+  }
+}
+
 ///A counter that keeps track of the number of Ball objects created
 static int UIDcounter = 0;
 
@@ -87,7 +154,9 @@ float defaultRadius = 40f;
 ///The maximum number of physics steps before moving to another frame
 int maxCounter = 1000;
 
-Dictionary<int,int> test;
+Hashtable edges = new Hashtable();
+
+ArrayList<Tri> triList = new ArrayList<Tri>();
 
 void setup()
 {
@@ -117,6 +186,9 @@ void draw()
   boolean hasHit = false;
   int counter = 0;
   
+  //Only 3 should ever touch, but just in case...
+  int[] touched = new int[8];
+  
   do
   {
     hasHit = false;
@@ -145,7 +217,7 @@ void draw()
             ball.vel.mult(contactVel / ball.vel.mag());
           }
           
-          collisionCount++;
+          touched[collisionCount++] = check.UID;
           hasHit = true;
           ball.hasHit = true;
           
@@ -187,6 +259,7 @@ void draw()
       //Triangle found!
       if(ball.isTracer && collisionCount == 3)
       {
+        addTriangle(touched[0], touched[1], touched[2]);
       }
       
       if(counter == 1)
@@ -217,6 +290,38 @@ void spawnBall(float X, float Y)
   ball.SetVelocity(vel);
   
   balls.add(ball);
+}
+
+boolean addTriangle(int p1, int p2, int p3)
+{
+  Edge e1 = new Edge(p1, p2);
+  Edge e2 = new Edge(p2, p3);
+  Edge e3 = new Edge(p3, p1);
+  
+  //Make sure the edge isn't in the table already
+  for(Enumeration e = edges.elements(); e.hasMoreElements();)
+  {
+    Edge edge = (Edge)e.nextElement();
+    
+    if(edge.compareTo(e1) == 0) e1 = edge;
+    if(edge.compareTo(e2) == 0) e2 = edge;
+    if(edge.compareTo(e3) == 0) e3 = edge;
+  }
+  
+  Tri newTri = new Tri(e1, e2, e3);
+  
+  //Check if the triangle exists
+  for(int i = 0; i < triList.size(); i++)
+  {
+    Tri tri = triList.get(i);
+    
+    //Return false if the triangle is already in the mesh
+    if(tri.compareTo(newTri) == 0) return false;
+  }
+  
+  triList.add(newTri);
+  
+  return true;
 }
 
 void generateHull()
