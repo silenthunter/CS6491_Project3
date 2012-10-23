@@ -1,9 +1,13 @@
 /**
 * @brief Ball class
 *
+* @Note Not thread safe
 */
 class Ball
-{
+{ 
+  ///A unique ID that is used to index vertices
+  int UID;
+  
   ///The 3D position of the Ball
   PVector pos;
   
@@ -13,6 +17,9 @@ class Ball
   ///The radius of the Ball
   float r;
   boolean hasHit = false;
+  
+  ///Is used for hull generation. Will not be collided with
+  boolean isTracer = false;
   
   /**
   * @brief Initializes a Ball object with the given parameters
@@ -29,6 +36,8 @@ class Ball
     pos = new PVector(x, y, z);
     vel = new PVector(vx, vy, vz);
     this.r = r;
+    
+    UID = UIDcounter++;
   }
 
   /**
@@ -47,7 +56,15 @@ class Ball
   {
     this.vel = vel.get();
   }
+  
+  public void SetTracer(boolean isTracer)
+  {
+    this.isTracer = isTracer;
+  }
 }
+
+///A counter that keeps track of the number of Ball objects created
+static int UIDcounter = 0;
 
 ///The Ball objects in the system
 ArrayList<Ball> balls = new ArrayList<Ball>();
@@ -67,8 +84,10 @@ float contactVel = 1f;
 ///The radius user spawned balls will be created with
 float defaultRadius = 40f;
 
-///
+///The maximum number of physics steps before moving to another frame
 int maxCounter = 1000;
+
+Dictionary<int,int> test;
 
 void setup()
 {
@@ -109,12 +128,14 @@ void draw()
       fill(0, 255, 0);
       if(counter == 1 || ball.hasHit) ball.pos.add(ball.vel);
      
+      int collisionCount = 0;
       //Don't check for collisions if the ball isn't moving. (I really should use brackets....)
       if(ball.vel.mag() != 0) 
       //Find collisions
       for(Ball check : balls)
       {
-        if(ball == check) continue;
+        //Don't attempt to collide with 'self' or a tracer ball
+        if(ball == check || check.isTracer) continue;
         
         float d = ball.pos.dist(check.pos);
         if(d <= 1 + ball.r + check.r && ball.vel.mag() > minSpeed)
@@ -124,6 +145,7 @@ void draw()
             ball.vel.mult(contactVel / ball.vel.mag());
           }
           
+          collisionCount++;
           hasHit = true;
           ball.hasHit = true;
           
@@ -162,6 +184,11 @@ void draw()
           ball.vel.set(0, 0, 0);
       }
       
+      //Triangle found!
+      if(ball.isTracer && collisionCount == 3)
+      {
+      }
+      
       if(counter == 1)
       {  
         pushMatrix();
@@ -174,6 +201,9 @@ void draw()
   
   if(mousePressed)
     spawnBall(mouseX, mouseY);
+    
+  if(keyPressed)
+    generateHull();
 }
 
 void spawnBall(float X, float Y)
@@ -187,4 +217,12 @@ void spawnBall(float X, float Y)
   ball.SetVelocity(vel);
   
   balls.add(ball);
+}
+
+void generateHull()
+{
+  //launch the first tracer ball
+  Ball firstTracer = new Ball(width / 2, height / 2, 500, defaultRadius, 0, 0, -launchVel);
+  firstTracer.SetTracer(true);
+  balls.add(firstTracer);
 }
