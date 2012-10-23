@@ -158,6 +158,8 @@ Hashtable edges = new Hashtable();
 
 ArrayList<Tri> triList = new ArrayList<Tri>();
 
+boolean meshMode = false;
+
 void setup()
 {
   size(400, 400, P3D);
@@ -259,10 +261,13 @@ void draw()
       //Triangle found!
       if(ball.isTracer && collisionCount == 3)
       {
-        addTriangle(touched[0], touched[1], touched[2]);
+        //Make sure it's not a redundant triangle
+        if(addTriangle(touched[0], touched[1], touched[2]))
+        {
+        }
       }
       
-      if(counter == 1)
+      if(counter == 1 && !meshMode)
       {  
         pushMatrix();
         translate(ball.pos.x, ball.pos.y, ball.pos.z);
@@ -272,10 +277,37 @@ void draw()
     }
   }while(counter < maxCounter && hasHit);
   
+  if(meshMode)
+  {
+    for(int i = 0; i < triList.size(); i++)
+    {
+      beginShape();
+      
+      int p1 = triList.get(i).edges[0].verts[0];
+      int p2 = triList.get(i).edges[1].verts[0];
+      int p3 = triList.get(i).edges[2].verts[0];
+      
+      Ball b1 = null, b2 = null, b3 = null;
+      
+      for(int j = 0; j < balls.size(); j++)
+      {
+        if(balls.get(j).UID == p1) b1 = balls.get(j);
+        if(balls.get(j).UID == p2) b2 = balls.get(j);
+        if(balls.get(j).UID == p3) b3 = balls.get(j);
+      }
+      
+      vertex(b1.pos.x, b1.pos.y, b1.pos.z);
+      vertex(b2.pos.x, b2.pos.y, b2.pos.z);
+      vertex(b3.pos.x, b3.pos.y, b3.pos.z);
+      
+      endShape();
+    }
+  }
+  
   if(mousePressed)
     spawnBall(mouseX, mouseY);
     
-  if(keyPressed)
+  if(keyPressed && key != 'q')
     generateHull();
 }
 
@@ -330,4 +362,9 @@ void generateHull()
   Ball firstTracer = new Ball(width / 2, height / 2, 500, defaultRadius, 0, 0, -launchVel);
   firstTracer.SetTracer(true);
   balls.add(firstTracer);
+}
+
+void keyTyped()
+{
+  if(key == 'q') meshMode = !meshMode;
 }
