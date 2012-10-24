@@ -17,9 +17,13 @@ class Ball
   ///The radius of the Ball
   float r;
   boolean hasHit = false;
+  boolean hasHitThisFrame = false;
   
   ///Is used for hull generation. Will not be collided with
   boolean isTracer = false;
+  
+  ///A ball that the tracer will not collide with
+  Ball nonCollide = null;
   
   /**
   * @brief Initializes a Ball object with the given parameters
@@ -135,13 +139,13 @@ ArrayList<Ball> toRemove = new ArrayList<Ball>();
 ArrayList<Ball> toAdd = new ArrayList<Ball>();
 
 ///The minimum velocity a ball can have before being stopped
-final float minSpeed = .01f;
+final float minSpeed = .005f;
 
 ///A point used to calculate the ball launch angle
 PVector POV;
 
 ///The velocity balls are launched at
-float launchVel = 100f;
+float launchVel = 50f;
 
 ///The velocity balls are set to when they contact another ball
 float contactVel = 1f;
@@ -150,13 +154,16 @@ float contactVel = 1f;
 float defaultRadius = 40f;
 
 ///The maximum number of physics steps before moving to another frame
-int maxCounter = 1000;
+int maxCounter = 1;
 
 ArrayList<Edge> edges = new ArrayList<Edge>();
 
 ArrayList<Tri> triList = new ArrayList<Tri>();
 
 boolean meshMode = false;
+
+long frameCounter = 0;
+int framesPerSpawn = 5;
 
 void setup()
 {
@@ -165,9 +172,9 @@ void setup()
   POV = new PVector(width / 2, height / 2, 500);
   
   //Initialize field
-  for(int i = 0; i < height / defaultRadius; i++)
+  for(int i = 0; i < height / defaultRadius / 2; i++)
   {
-    for(int j = 0; j < width / defaultRadius; j++)
+    for(int j = 0; j < width / defaultRadius / 2; j++)
     {
       println(i + ", " + j);
       balls.add(new Ball(j * (defaultRadius * 2) + (i % 2 == 0 ?  0 : defaultRadius), i * (defaultRadius * 1.5), -500, defaultRadius));
@@ -192,33 +199,44 @@ void draw()
   
   do
   {
+    tracerCount = 0;
     hasHit = false;
     counter++;
     
     for(Ball ball : balls)
     {
       if(ball.isTracer)
-        if(tracerCount++ > 8) continue;
+        if(tracerCount++ > 50) continue;
       
       fill(0, 255, 0);
-      if(counter == 1 || (ball.hasHit/* && !ball.isTracer*/)) ball.pos.add(ball.vel);
+      if(counter == 1 || ball.hasHit) ball.pos.add(ball.vel);
      
       int collisionCount = 0;
+      PVector translation = new PVector(0, 0, 0);
+      ball.hasHitThisFrame = false;
+      ArrayList<Ball> collisions = new ArrayList<Ball>();
+      
       //Don't check for collisions if the ball isn't moving. (I really should use brackets....)
       if(ball.vel.mag() != 0) 
       //Find collisions
       for(Ball check : balls)
       {
         //Don't attempt to collide with 'self' or a tracer ball
-        if(ball == check || check.isTracer) continue;
+        if(ball == check || check.isTracer || check == ball.nonCollide) continue;
         
         float d = ball.pos.dist(check.pos);
-        if(d <= 1 + ball.r + check.r && ball.vel.mag() > minSpeed)
+        if(d <= .1 + ball.r + check.r && ball.vel.mag() > minSpeed)
         {
+          collisions.add(check);
+          
           if(!ball.hasHit)
           {
-            ball.vel.mult(contactVel / ball.vel.mag());
+            //ball.vel.mult(contactVel / ball.vel.mag());
           }
+          
+          //Keep the tracers moving
+          if(ball.isTracer)
+            ball.vel.mult(contactVel / ball.vel.mag());
           
           touched[collisionCount++] = check.UID;
           hasHit = true;
@@ -236,7 +254,7 @@ void draw()
           tang.mult(ball.vel.mag() / tang.mag());
           
           //Set the new velocity
-          if(ball.hasHit)
+          if(ball.hasHitThisFrame)
           {
             ball.vel.add(tang);
             ball.vel.div(2);
@@ -245,22 +263,31 @@ void draw()
             ball.vel = tang;
           
           //Adjust for the discrete timesteps
-          PVector translation = vAnti.get();
+          PVector tempTranslation = vAnti.get();
           float magn = (vAnti.mag() - (check.r + ball.r)) / vAnti.mag();
-          translation.set(translation.x * magn, translation.y * magn, translation.z * magn);
+          tempTranslation.set(tempTranslation.x * magn, tempTranslation.y * magn, tempTranslation.z * magn);
+          translation.add(tempTranslation);
           
-          //Fix the ball's position
-          ball.pos.add(translation);
+          ball.hasHitThisFrame = true;
           
           fill(255, 0, 255);
-        }
+        }//end inner ball loop
         //If a ball's speed is too low, stop it
-        else if(ball.vel.mag() < minSpeed)
+        else if(ball.vel.mag() < minSpeed && !ball.isTracer)
           ball.vel.set(0, 0, 0);
       }
       
+      //Fix the ball's position
+      if(collisionCount > 0)
+        translation.div(collisionCount);
+      ball.pos.add(translation);
+      
       //Triangle found!
-      if(ball.isTracer && collisionCount == 3)
+      if(collisionCount >= 3 && !ball.isTracer)
+      {
+        ball.vel.set(0, 0, 0);
+      }
+      if(ball.isTracer && collisionCount >= 3)
       {
         //Mark the finished tracer for removal
         toRemove.add(ball);
@@ -280,40 +307,46 @@ void draw()
           
           Ball b1 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
           b1.SetVelocity(getTangent(ball.pos, p1.pos, p2.pos));
-          b1.pos.add(b1.vel);
+          //b1.pos.add(b1.vel);
           b1.SetTracer(true);
+          b1.nonCollide = p3;
           
           Ball b2 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
           b2.SetVelocity(getTangent(ball.pos, p2.pos, p3.pos));
-          b2.pos.add(b2.vel);
+          //b2.pos.add(b2.vel);
           b2.SetTracer(true);
+          b2.nonCollide = p1;
           
           Ball b3 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
           b3.SetVelocity(getTangent(ball.pos, p3.pos, p1.pos));
-          b3.pos.add(b3.vel);
+          //b3.pos.add(b3.vel);
           b3.SetTracer(true);
+          b3.nonCollide = p2;
           
           Ball b4 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
           b4.SetVelocity(getTangent(ball.pos, p2.pos, p1.pos));
-          b4.pos.add(b4.vel);
+          //b4.pos.add(b4.vel);
           b4.SetTracer(true);
+          b4.nonCollide = p3;
           
           Ball b5 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
           b5.SetVelocity(getTangent(ball.pos, p3.pos, p2.pos));
-          b5.pos.add(b5.vel);
+          //b5.pos.add(b5.vel);
           b5.SetTracer(true);
+          b5.nonCollide = p1;
           
           Ball b6 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
           b6.SetVelocity(getTangent(ball.pos, p1.pos, p3.pos));
-          b6.pos.add(b6.vel);
+          //b6.pos.add(b6.vel);
           b6.SetTracer(true);
+          b6.nonCollide = p2;
           
-          toAdd.add(b1);
+          //toAdd.add(b1);
           toAdd.add(b2);
-          toAdd.add(b3);
-          toAdd.add(b4);
+          //toAdd.add(b3);
+          /*toAdd.add(b4);
           toAdd.add(b5);
-          toAdd.add(b6);
+          toAdd.add(b6);*/
         }
       }
       
@@ -337,6 +370,7 @@ void draw()
     balls.add(ball);
   toAdd.clear();
   
+  //Draw the triangle mesh
   if(meshMode)
   {
     for(int i = 0; i < triList.size(); i++)
@@ -364,7 +398,7 @@ void draw()
     }
   }
   
-  if(mousePressed)
+  if(frameCounter++ % framesPerSpawn == 0 && mousePressed)// && balls.size() % 2 != 0)
     spawnBall(mouseX, mouseY);
     
   if(keyPressed && key != 'q')
@@ -383,7 +417,7 @@ PVector getTangent(PVector origin, PVector p1, PVector p2)
   PVector.cross(v1, v2, retn);
   retn.normalize();
   
-  retn.mult(contactVel);
+  retn.mult(.001);
   
   return retn;
 }
