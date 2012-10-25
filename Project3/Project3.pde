@@ -688,6 +688,37 @@ void keyPressed() {
    if (key=='s') {rotation=false;zoom=false;spray=!spray;}
    if (key=='h') generateHull();
    if (key=='m') meshMode = !meshMode;
+   if (key=='d') SaveToFile();
+   if (key=='l') LoadFromFile();
+}
+
+void SaveToFile()
+{
+  ArrayList<String> strs = new ArrayList<String>();
+  
+  for(Ball ball: balls)
+  {
+    String outLine = ball.pos.x + " " + ball.pos.y + " " + ball.pos.z + " " + ball.r;
+    strs.add(outLine);
+  }
+  String[] strArr = new String[strs.size()];
+  strs.toArray(strArr);
+  
+  saveStrings("save.vts", strArr);
+  
+}
+
+void LoadFromFile()
+{
+  balls.clear();
+  String[] linesArr = loadStrings("save.vts");
+  
+  for(int i = 0; i < linesArr.length; i++)
+  {
+    StringTokenizer st = new StringTokenizer(linesArr[i]);
+    balls.add(new Ball(Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken())));
+    
+  }
 }
   
 
