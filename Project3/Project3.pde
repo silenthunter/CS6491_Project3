@@ -694,38 +694,31 @@ void keyPressed() {
 
 void SaveToFile()
 {
-  try
-  {
-  FileWriter fstream = new FileWriter("C:\\Users\\Gavin\\Documents\\Git\\CS6491_Project3\\Project3\\save.vts");
-  BufferedWriter out = new BufferedWriter(fstream);
+  ArrayList<String> strs = new ArrayList<String>();
   
   for(Ball ball: balls)
   {
-    out.write(ball.pos.x + " " + ball.pos.y + " " + ball.pos.z + " " + ball.r + "\n");
+    String outLine = ball.pos.x + " " + ball.pos.y + " " + ball.pos.z + " " + ball.r;
+    strs.add(outLine);
   }
+  String[] strArr = new String[strs.size()];
+  strs.toArray(strArr);
   
-  out.close();
-  }catch(IOException e){println(e);}
+  saveStrings("save.vts", strArr);
+  
 }
 
 void LoadFromFile()
 {
   balls.clear();
-  try
+  String[] linesArr = loadStrings("save.vts");
+  
+  for(int i = 0; i < linesArr.length; i++)
   {
-    FileReader fstream = new FileReader("C:\\Users\\Gavin\\Documents\\Git\\CS6491_Project3\\Project3\\save.vts");
-    BufferedReader in = new BufferedReader(fstream);
+    StringTokenizer st = new StringTokenizer(linesArr[i]);
+    balls.add(new Ball(Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken())));
     
-    String lineStr = in.readLine();
-    
-    while(lineStr != null)
-    {
-      StringTokenizer st = new StringTokenizer(lineStr);
-      balls.add(new Ball(Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken())));
-      
-      lineStr = in.readLine();
-    }
-  }catch(IOException e){println(e);}
+  }
 }
   
 
