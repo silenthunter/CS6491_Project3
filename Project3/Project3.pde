@@ -154,7 +154,7 @@ float contactVel = 1f;
 float defaultRadius = 40f;
 
 ///The maximum number of physics steps before moving to another frame
-int maxCounter = 1;
+int maxCounter = 1000;
 
 ArrayList<Edge> edges = new ArrayList<Edge>();
 
@@ -293,6 +293,9 @@ void draw()
           
           PVector tang = getTangent(ball.pos, c1.pos, c2.pos);
           
+          if(PVector.angleBetween(tang, ball.vel) > Math.PI / 2)
+            tang.mult(-1);
+          
           ball.vel = tang;
           
           //fix the position of the ball
@@ -417,55 +420,31 @@ void spawnTracers(Ball ball, int[] touched)
         if(balls.get(i).UID == touched[2]) p3 = balls.get(i);
       }
       
-      /*Ball b1 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
+      Ball b1 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
       b1.SetVelocity(getTangent(ball.pos, p1.pos, p2.pos));
       //b1.pos.add(b1.vel);
       b1.SetTracer(true);
-      b1.nonCollide = p3;*/
+      b1.nonCollide = p3;
       
       Ball b2 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
-      //b2.SetVelocity(getTangent(ball.pos, p2.pos, p3.pos));
+      b2.SetVelocity(getTangent(ball.pos, p2.pos, p3.pos));
       //b2.pos.add(b2.vel);
       b2.SetTracer(true);
       b2.nonCollide = p1;
       
       Ball b3 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
       b3.SetVelocity(getTangent(ball.pos, p1.pos, p3.pos));
+      b3.vel.mult(-1);
       //b3.pos.add(b3.vel);
       b3.SetTracer(true);
       b3.nonCollide = p2;
       
-      /*Ball b4 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
-      b4.SetVelocity(getTangent(ball.pos, p2.pos, p1.pos));
-      //b4.pos.add(b4.vel);
-      b4.SetTracer(true);
-      b4.nonCollide = p3;
-      
-      Ball b5 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
-      b5.SetVelocity(getTangent(ball.pos, p3.pos, p2.pos));
-      //b5.pos.add(b5.vel);
-      b5.SetTracer(true);
-      b5.nonCollide = p1;
-      
-      Ball b6 = new Ball(ball.pos.x, ball.pos.y, ball.pos.z, ball.r);
-      b6.SetVelocity(getTangent(ball.pos, p1.pos, p3.pos));
-      //b6.pos.add(b6.vel);
-      b6.SetTracer(true);
-      b6.nonCollide = p2;*/
-      
-      //toAdd.add(b1);
-      //toAdd.add(b2);
+      toAdd.add(b1);
+      toAdd.add(b2);
       toAdd.add(b3);
-      /*toAdd.add(b4);
-      toAdd.add(b5);
-      toAdd.add(b6);*/
     }
 }
 
-/*PVector getTangent(PVector origin, PVector p1, PVector p2)
-{
-  return getTangent(origin, p1, p2, false);
-}*/
 
 PVector getTangent(PVector origin, PVector p1, PVector p2)
 {
