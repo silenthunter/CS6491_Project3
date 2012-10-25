@@ -688,6 +688,44 @@ void keyPressed() {
    if (key=='s') {rotation=false;zoom=false;spray=!spray;}
    if (key=='h') generateHull();
    if (key=='m') meshMode = !meshMode;
+   if (key=='d') SaveToFile();
+   if (key=='l') LoadFromFile();
+}
+
+void SaveToFile()
+{
+  try
+  {
+  FileWriter fstream = new FileWriter("C:\\Users\\Gavin\\Documents\\Git\\CS6491_Project3\\Project3\\save.vts");
+  BufferedWriter out = new BufferedWriter(fstream);
+  
+  for(Ball ball: balls)
+  {
+    out.write(ball.pos.x + " " + ball.pos.y + " " + ball.pos.z + " " + ball.r + "\n");
+  }
+  
+  out.close();
+  }catch(IOException e){println(e);}
+}
+
+void LoadFromFile()
+{
+  balls.clear();
+  try
+  {
+    FileReader fstream = new FileReader("C:\\Users\\Gavin\\Documents\\Git\\CS6491_Project3\\Project3\\save.vts");
+    BufferedReader in = new BufferedReader(fstream);
+    
+    String lineStr = in.readLine();
+    
+    while(lineStr != null)
+    {
+      StringTokenizer st = new StringTokenizer(lineStr);
+      balls.add(new Ball(Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken()), Float.parseFloat(st.nextToken())));
+      
+      lineStr = in.readLine();
+    }
+  }catch(IOException e){println(e);}
 }
   
 
